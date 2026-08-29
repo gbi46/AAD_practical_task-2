@@ -5,7 +5,7 @@ Unit tests для guardrails мультиагентної системи.
     pytest test_guardrails.py -v
 """
 
-from guardrails import input_guardrail, output_guardrail
+from guardrails import input_guardrail, output_guardrail, tool_guardrail
 
 
 def test_input_guardrail_allows_safe_text():
@@ -54,3 +54,23 @@ def test_output_guardrail_redacts_phone():
 
     assert "+380 67 123 45 67" not in sanitized
     assert "[PHONE_REDACTED]" in sanitized
+
+
+def test_tool_guardrail_allows_billing_refund():
+    """Billing-agent має право виконувати повернення коштів."""
+    assert tool_guardrail("billing", "process_refund") is True
+
+
+def test_tool_guardrail_blocks_triage_refund():
+    """Triage-agent не повинен мати прямий доступ до process_refund."""
+    assert tool_guardrail("triage", "process_refund") is False
+
+
+def test_tool_guardrail_blocks_unknown_agent():
+    """Невідомий агент не має доступу до жодного tool."""
+    assert tool_guardrail("unknown_agent", "search_faq") is False
+
+
+def test_tool_guardrail_blocks_unknown_tool():
+    """Невідомий tool має блокуватися навіть для валідного агента."""
+    assert tool_guardrail("billing", "delete_order") is False
