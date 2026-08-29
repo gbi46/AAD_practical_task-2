@@ -1,2 +1,7 @@
 mcp[cli]
 pytest
+google-adk
+crewai
+langchain-core
+langchain-google-genai
+langgraph
