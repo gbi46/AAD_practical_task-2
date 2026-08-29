@@ -26,6 +26,9 @@ dist/
 *.egg-info/
 .eggs/
 
+# Node.js dependencies (used by MCP Inspector)
+node_modules/
+
 # Local environment variables and secrets
 .env
 .env.*

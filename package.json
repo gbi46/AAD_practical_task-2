@@ -1,0 +1,10 @@
+{
+  "name": "customer-support-mcp-server",
+  "private": true,
+  "scripts": {
+    "inspector": "mcp-inspector python mcp_server.py"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "latest"
+  }
+}
