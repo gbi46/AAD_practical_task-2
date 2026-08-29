@@ -18,11 +18,11 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from mcp.server.mcpserver import MCPServer
+from mcp.server.fastmcp import FastMCP
 
 # ── Ініціалізація MCP-сервера ────────────────────────────────────
 
-mcp = MCPServer(
+mcp = FastMCP(
     name="customer_support",
     instructions=(
         "Сервер для системи підтримки клієнтів. "

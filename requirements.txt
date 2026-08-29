@@ -1,6 +1,6 @@
-mcp[cli]
+mcp[cli]>=1.24,<2
 pytest
-google-adk
+google-adk[mcp]
 crewai
 langchain-core
 langchain-google-genai
