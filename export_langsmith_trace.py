@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -115,32 +116,46 @@ def main() -> int:
 
     client = Client()
 
-    if args.run_id:
-        run = client.read_run(args.run_id, load_child_runs=not args.no_children)
-    else:
-        try:
-            runs = client.list_runs(project_name=project_name, is_root=True, limit=50)
-            run = next((item for item in runs if not args.name or item.name == args.name), None)
-        except langsmith_utils.LangSmithNotFoundError:
-            projects = [project.name for project in client.list_projects(limit=20)]
-            print(f"LangSmith project {project_name!r} was not found.", file=sys.stderr)
-            if projects:
-                print("Available projects:", file=sys.stderr)
-                for available_project in projects:
-                    print(f"  - {available_project}", file=sys.stderr)
-            print(f"Set LANGSMITH_PROJECT in {DEFAULT_ENV_FILE}", file=sys.stderr)
-            return 1
+    try:
+        if args.run_id:
+            run = client.read_run(args.run_id, load_child_runs=not args.no_children)
+        else:
+            run = None
+            for attempt in range(1, 6):
+                try:
+                    runs = client.list_runs(project_name=project_name, is_root=True, limit=50)
+                    run = next((item for item in runs if not args.name or item.name == args.name), None)
+                except langsmith_utils.LangSmithNotFoundError:
+                    projects = [project.name for project in client.list_projects(limit=20)]
+                    print(f"LangSmith project {project_name!r} was not found.", file=sys.stderr)
+                    if projects:
+                        print("Available projects:", file=sys.stderr)
+                        for available_project in projects:
+                            print(f"  - {available_project}", file=sys.stderr)
+                    print(
+                        f"Check that LANGSMITH_PROJECT in {DEFAULT_ENV_FILE} exactly matches "
+                        "an existing project for this API key/workspace.",
+                        file=sys.stderr,
+                    )
+                    return 1
+                if run is not None:
+                    break
+                if attempt < 5:
+                    time.sleep(2)
 
-        if run is None:
-            print(
-                f"No root runs found in LangSmith project {project_name!r}. "
-                "Run the traced demo first or pass --run-id.",
-                file=sys.stderr,
-            )
-            return 1
+            if run is None:
+                print(
+                    f"No root runs found in LangSmith project {project_name!r}. "
+                    "Run the traced demo first or pass --run-id.",
+                    file=sys.stderr,
+                )
+                return 1
 
-        if not args.no_children:
-            run = client.read_run(run.id, load_child_runs=True)
+            if not args.no_children:
+                run = client.read_run(run.id, load_child_runs=True)
+    except langsmith_utils.LangSmithConnectionError as exc:
+        print(f"Could not connect to LangSmith: {exc}", file=sys.stderr)
+        return 1
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

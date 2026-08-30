@@ -45,6 +45,15 @@ python -m pip install -r requirements.txt
 python -m pytest -v
 ```
 
+Альтернативно можна виконати повну підготовку й базову перевірку одним скриптом:
+
+```bash
+chmod +x run_all.sh
+./run_all.sh
+```
+
+Скрипт створює `.venv`, встановлює Python-залежності, за наявності Node.js встановлює залежності для MCP Inspector, запускає тести, LangGraph-демо, локальну перевірку tracing wrappers і експортує LangSmith trace-фрагмент, якщо в `.env` або shell задано `LANGSMITH_API_KEY` та `LANGSMITH_PROJECT`.
+
 Запуск LangGraph-демо без API-ключа:
 
 ```bash
