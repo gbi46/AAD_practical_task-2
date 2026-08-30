@@ -1,5 +1,3 @@
-# ── mas_crewai.py ────────────────────────────────────────────────
-
 """
 Реалізація того самого кейсу Customer Support MAS у CrewAI.
 Патерн: hierarchical crew з manager_agent.

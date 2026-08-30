@@ -1,5 +1,3 @@
-# ── mcp_server.py ────────────────────────────────────────────────
-
 """
 MCP Server для Customer Support MAS.
 
