@@ -54,8 +54,11 @@ else
     echo "Skipping MCP Inspector dependencies: node/npm not found." >&2
 fi
 
-echo "Running tests..."
-.venv/bin/python -m pytest -v
+echo "Running core tests..."
+.venv/bin/python -m pytest -v test_mcp_server.py test_guardrails.py
+
+echo "Running CrewAI guardrail tests..."
+.venv/bin/python -m pytest -v test_crewai_tools.py
 
 echo "Running LangGraph demo..."
 .venv/bin/python mas_langgraph.py
