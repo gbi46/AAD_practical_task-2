@@ -47,7 +47,9 @@ def compact_run(run: Any, include_children: bool = True) -> dict[str, Any]:
 
     child_runs = data.get("child_runs") or []
     if include_children and child_runs:
-        fragment["child_runs"] = [compact_run(child, include_children=False) for child in child_runs]
+        fragment["child_runs"] = [
+            compact_run(child, include_children=False) for child in child_runs
+        ]
 
     return fragment
 

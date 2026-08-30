@@ -49,3 +49,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Generated trace exports
+langsmith_trace_fragment.json
