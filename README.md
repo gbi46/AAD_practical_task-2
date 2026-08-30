@@ -25,16 +25,18 @@ tech -> END
 
 `triage` не має прямого доступу до `process_refund`. Повернення коштів проходить через `billing` і вимагає HITL-підтвердження.
 
+У CrewAI-варіанті agents отримують тільки свої tools: `orders_agent` має `check_order_status`, `billing_agent` має `process_refund`, а `tech_agent` має `search_faq`. Ці tools є thin wrappers над тією самою бізнес-логікою, що використовується MCP-сервером, і проходять через `tool_guardrail`, `validate_tool_args` та `output_guardrail`.
+
 ## Структура
 
 - `mcp_server.py` - FastMCP server з tools `check_order_status`, `check_payment`, `process_refund`, `search_faq`;
 - `mas_langgraph.py` - LangGraph MAS із supervisor та 3 спеціалізованими агентами;
-- `mas_crewai.py` - той самий кейс у CrewAI hierarchical process;
+- `mas_crewai.py` - той самий кейс у CrewAI hierarchical process із guardrailed tool wrappers;
 - `langchain_mcp_agent.py` - приклад інтеграції MCP-tools через `langchain-mcp-adapters`;
 - `adk_agent.py` - додаткова ADK-реалізація з `McpToolset`;
 - `guardrails.py` - input/tool/output guardrails;
 - `tracing_setup.py` - приклад LangSmith tracing wrappers;
-- `test_mcp_server.py`, `test_guardrails.py` - pytest-тести.
+- `test_mcp_server.py`, `test_guardrails.py`, `test_crewai_tools.py` - pytest-тести.
 
 ## Запуск
 
@@ -166,5 +168,5 @@ Guardrail захищає від indirect injection тим, що перевіря
 Результат:
 
 ```text
-24 passed in 0.37s
+29 passed
 ```
