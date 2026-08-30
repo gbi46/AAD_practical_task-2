@@ -56,6 +56,9 @@ TOOL_PERMISSIONS: dict[str, set[str]] = {
     "tech": {"check_order_status", "search_faq"},
 }
 
+ORDER_ID_PATTERN = re.compile(r"^ORD-\d{3,5}$")
+PAYMENT_ID_PATTERN = re.compile(r"^PAY-\d{3,5}$")
+
 def tool_guardrail(agent: str, tool: str) -> bool:
     """
     Перевіряє, чи має агент право викликати конкретний інструмент.
@@ -71,6 +74,46 @@ def tool_guardrail(agent: str, tool: str) -> bool:
     if not allowed:
         logger.warning("[TOOL_BLOCKED] agent=%s tool=%s", agent, tool)
     return allowed
+
+def validate_tool_args(tool: str, args: dict) -> tuple[bool, str]:
+    """
+    Перевіряє аргументи MCP tool перед викликом.
+
+    Args:
+        tool: Назва інструмента.
+        args: Аргументи, які агент хоче передати.
+
+    Returns:
+        (is_valid, message)
+    """
+    if tool == "check_order_status":
+        order_id = str(args.get("order_id", ""))
+        if not ORDER_ID_PATTERN.match(order_id):
+            return False, "order_id має формат ORD-001 або ORD-12345."
+        return True, "ok"
+
+    if tool == "check_payment":
+        payment_id = str(args.get("payment_id", ""))
+        if not PAYMENT_ID_PATTERN.match(payment_id):
+            return False, "payment_id має формат PAY-001 або PAY-12345."
+        return True, "ok"
+
+    if tool == "process_refund":
+        order_id = str(args.get("order_id", ""))
+        reason = str(args.get("reason", "")).strip()
+        if not ORDER_ID_PATTERN.match(order_id):
+            return False, "order_id має формат ORD-001 або ORD-12345."
+        if len(reason) < 5:
+            return False, "reason має містити щонайменше 5 символів."
+        return True, "ok"
+
+    if tool == "search_faq":
+        query = str(args.get("query", "")).strip()
+        if not query or len(query) > 300:
+            return False, "query має бути непорожнім і не довшим за 300 символів."
+        return True, "ok"
+
+    return False, "Невідомий інструмент."
 
 # ── Output guardrail ─────────────────────────────────────────────
 
@@ -108,6 +151,7 @@ if __name__ == "__main__":
     assert tool_guardrail("triage", "search_faq") is True
     assert tool_guardrail("triage", "process_refund") is False
     assert tool_guardrail("billing", "process_refund") is True
+    assert validate_tool_args("process_refund", {"order_id": "ORD-001", "reason": "Брак"})[0]
 
     assert "[EMAIL_REDACTED]" in output_guardrail("Email: john@test.com")
     assert "[CARD_REDACTED]" in output_guardrail("Card: 4242 4242 4242 4242")

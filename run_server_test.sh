@@ -16,10 +16,10 @@ case "$(command -v npm 2>/dev/null || true)" in
         ;;
 esac
 
-python3.12 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python -m pytest test_mcp_server.py -v
+python -m pytest -v
 npm install
 npm run inspector

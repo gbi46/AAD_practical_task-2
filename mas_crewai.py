@@ -16,10 +16,24 @@ triage_manager = Agent(
     goal="Визначити тип запиту користувача і делегувати його правильному спеціалісту",
     backstory=(
         "Ти координатор служби підтримки. "
-        "Твоя задача — правильно спрямувати звернення до billing або tech."
+        "Твоя задача — правильно спрямувати звернення до orders, billing або tech."
     ),
     llm="gemini/gemini-2.5-flash",
     allow_delegation=True,
+    verbose=True,
+)
+
+# ── Billing specialist ───────────────────────────────────────────
+
+orders_agent = Agent(
+    role="Orders Specialist",
+    goal="Перевірити статус замовлення, доставку та дані відстеження",
+    backstory=(
+        "Ти спеціаліст із замовлень. Спочатку з'ясовуєш фактичний стан "
+        "замовлення, а запити на повернення передаєш billing-спеціалісту."
+    ),
+    llm="gemini/gemini-2.5-flash",
+    allow_delegation=False,
     verbose=True,
 )
 
@@ -57,9 +71,11 @@ tech_agent = Agent(
 support_task = Task(
     description=(
         "Оброби звернення користувача: {query}\n"
-        "1. Визнач, чи це billing або technical.\n"
+        "1. Визнач, чи це orders, billing або technical.\n"
         "2. Делегуй роботу правильному спеціалісту.\n"
-        "3. Поверни користувачу фінальну відповідь українською мовою."
+        "3. Якщо потрібне повернення коштів, зазнач, що process_refund потребує "
+        "підтвердження оператора.\n"
+        "4. Поверни користувачу фінальну відповідь українською мовою."
     ),
     expected_output=(
         "Коротка, зрозуміла відповідь українською мовою, "
@@ -72,7 +88,7 @@ support_task = Task(
 # Для hierarchical process обов'язково задаємо manager_agent.
 
 crew = Crew(
-    agents=[billing_agent, tech_agent],
+    agents=[orders_agent, billing_agent, tech_agent],
     tasks=[support_task],
     process=Process.hierarchical,
     manager_agent=triage_manager,

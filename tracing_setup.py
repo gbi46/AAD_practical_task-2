@@ -4,17 +4,15 @@
 Базове налаштування tracing для LangSmith та приклади ручного трасування.
 """
 
-import os
 import re
 
 from langsmith import traceable
 
 # ── LangSmith: базове ввімкнення трасування ──────────────────────
-# Ці змінні слід встановити ДО запуску агентів.
-
-os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = "lsv2_pt_your_key_here"
-os.environ["LANGSMITH_PROJECT"] = "practice-10-mas"
+# Ці змінні встановлюються у shell ДО запуску агентів:
+# export LANGSMITH_TRACING=true
+# export LANGSMITH_API_KEY=<your_langsmith_key>
+# export LANGSMITH_PROJECT=practice-2-customer-support
 
 # ── Приклади кастомного трасування ───────────────────────────────
 

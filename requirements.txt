@@ -7,4 +7,5 @@ langchain-core
 langchain-google-genai
 langchain-mcp-adapters
 langgraph
+langsmith
 python-dotenv

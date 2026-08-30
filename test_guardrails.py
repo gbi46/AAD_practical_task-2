@@ -5,7 +5,7 @@ Unit tests для guardrails мультиагентної системи.
     pytest test_guardrails.py -v
 """
 
-from guardrails import input_guardrail, output_guardrail, tool_guardrail
+from guardrails import input_guardrail, output_guardrail, tool_guardrail, validate_tool_args
 
 
 def test_input_guardrail_allows_safe_text():
@@ -74,3 +74,36 @@ def test_tool_guardrail_blocks_unknown_agent():
 def test_tool_guardrail_blocks_unknown_tool():
     """Невідомий tool має блокуватися навіть для валідного агента."""
     assert tool_guardrail("billing", "delete_order") is False
+
+
+def test_validate_tool_args_accepts_valid_refund():
+    """Аргументи process_refund мають проходити базову schema-перевірку."""
+    is_valid, message = validate_tool_args(
+        "process_refund",
+        {"order_id": "ORD-001", "reason": "Затримка доставки"},
+    )
+
+    assert is_valid is True
+    assert message == "ok"
+
+
+def test_validate_tool_args_rejects_bad_order_id():
+    """Некоректний order_id блокується до виклику tool."""
+    is_valid, message = validate_tool_args(
+        "check_order_status",
+        {"order_id": "DROP TABLE orders"},
+    )
+
+    assert is_valid is False
+    assert "order_id" in message
+
+
+def test_validate_tool_args_rejects_short_refund_reason():
+    """Порожня або надто коротка причина повернення блокується."""
+    is_valid, message = validate_tool_args(
+        "process_refund",
+        {"order_id": "ORD-001", "reason": "x"},
+    )
+
+    assert is_valid is False
+    assert "reason" in message

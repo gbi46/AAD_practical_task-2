@@ -38,7 +38,7 @@ async def main() -> None:
     tools = await client.get_tools()
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-3.6-flash",
+        model="gemini-2.5-flash",
         temperature=0.1,
     )
 

@@ -57,6 +57,15 @@ ORDERS: dict[str, dict[str, Any]] = {
         "date": "2026-03-22",
         "items": ["Monitor 27\"", "HDMI Cable"],
     },
+    "ORD-12345": {
+        "status": "shipped",
+        "total": 1500.00,
+        "currency": "UAH",
+        "date": "2026-08-25",
+        "items": ["Mechanical Keyboard"],
+        "tracking": "UA123",
+        "delay_reason": "Затримка на сортувальному центрі перевізника",
+    },
 }
 
 PAYMENTS: dict[str, dict[str, Any]] = {
@@ -109,13 +118,18 @@ def get_payment_payload(payment_id: str) -> dict[str, Any]:
         return {"error": f"Оплата {payment_id} не знайдена."}
     return {"payment_id": payment_id, **payment}
 
-def process_refund_payload(order_id: str, reason: str) -> dict[str, Any]:
+def process_refund_payload(
+    order_id: str,
+    reason: str,
+    human_approved: bool = False,
+) -> dict[str, Any]:
     """
     Формує результат повернення коштів.
 
     Правила:
         - повернення дозволене лише для замовлень зі статусом delivered;
-        - причина має бути не коротшою за 5 символів.
+        - причина має бути не коротшою за 5 символів;
+        - без підтвердження оператора повернення лишається у стані pending.
     """
     order = ORDERS.get(order_id)
     if not order:
@@ -132,6 +146,17 @@ def process_refund_payload(order_id: str, reason: str) -> dict[str, Any]:
     if not reason or len(reason.strip()) < 5:
         return {
             "error": "Причина повернення обов'язкова і має містити щонайменше 5 символів."
+        }
+
+    if not human_approved:
+        return {
+            "refund_id": f"REF-{order_id}",
+            "order_id": order_id,
+            "amount": order["total"],
+            "currency": order["currency"],
+            "reason": reason.strip(),
+            "status": "pending_human_approval",
+            "hitl_required": True,
         }
 
     return {
@@ -199,7 +224,7 @@ def check_payment(payment_id: str) -> str:
     return json.dumps(get_payment_payload(payment_id), ensure_ascii=False, indent=2)
 
 @mcp.tool()
-def process_refund(order_id: str, reason: str) -> str:
+def process_refund(order_id: str, reason: str, human_approved: bool = False) -> str:
     """
     Обробити повернення коштів.
 
@@ -210,11 +235,16 @@ def process_refund(order_id: str, reason: str) -> str:
     Args:
         order_id: ID замовлення.
         reason: Причина повернення.
+        human_approved: True лише після підтвердження оператора.
 
     Returns:
         JSON-рядок із результатом повернення або помилкою.
     """
-    return json.dumps(process_refund_payload(order_id, reason), ensure_ascii=False, indent=2)
+    return json.dumps(
+        process_refund_payload(order_id, reason, human_approved),
+        ensure_ascii=False,
+        indent=2,
+    )
 
 @mcp.tool()
 def search_faq(query: str) -> str:

@@ -42,10 +42,16 @@ def test_check_payment_not_found():
     assert "error" in data
 
 def test_refund_success():
-    """Повернення дозволене для delivered-замовлення."""
-    data = process_refund_payload("ORD-001", "Дефект товару")
+    """Повернення виконується лише після підтвердження оператора."""
+    data = process_refund_payload("ORD-001", "Дефект товару", human_approved=True)
     assert data["status"] == "processed"
     assert data["amount"] == 1250.00
+
+def test_refund_requires_human_approval():
+    """Без HITL-підтвердження повернення лишається pending."""
+    data = process_refund_payload("ORD-001", "Дефект товару")
+    assert data["status"] == "pending_human_approval"
+    assert data["hitl_required"] is True
 
 def test_refund_wrong_status():
     """Повернення заборонене для замовлення не у статусі delivered."""
